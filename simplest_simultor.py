@@ -17,22 +17,21 @@ class CustomEnv(gym.Env):
     def step(self, action):
         self.take_action(action)
         reward = 0
-        reward -= 10
+        reward -= 100
         observation = self.get_observation()
-        if observation[0,0] == 0 or observation[0,1] == 0:
+        if observation[4,0] == 0 or observation[4,1] == 0:
             done = True
             reward += 1000
         #elif observation[0,0] >= 100 or observation[0,1] >= 100:
         #    done = True
         #    reward -= 1000
         elif self.elapsed > 100:
-            reward -= 100
+            reward -= 1000
             done = True
         else:
             done = False
         self.elapsed += 1
         info = {}
-        print(reward)
         return observation, reward, done, info
 
     def reset(self):
@@ -49,7 +48,10 @@ class CustomEnv(gym.Env):
         abs_dxy = np.abs(dxy_roi_points)
         min_abs_dxy = np.min(abs_dxy,axis=1)
         abs_diff_abs_dxy = np.squeeze(np.abs(np.diff(abs_dxy)), axis=-1)
-        observation = np.stack((min_abs_dxy, abs_diff_abs_dxy), axis=-1)
+        diff_min_abs_dxy = np.concatenate((min_abs_dxy[:4] - min_abs_dxy[4:5], min_abs_dxy[4:5]), axis=0)
+        diff_abs_diff_abs_dxy = np.concatenate((abs_diff_abs_dxy[:4] - abs_diff_abs_dxy[4:5], abs_diff_abs_dxy[4:5]), axis=0)
+        # observation = np.stack((min_abs_dxy, abs_diff_abs_dxy), axis=-1)
+        observation = np.stack((diff_min_abs_dxy, diff_abs_diff_abs_dxy), axis=-1)
         return observation
 
     def take_action(self, action):
