@@ -10,35 +10,33 @@ class CustomEnv(gym.Env):
         # Define action and observation space
         # They must be gym.spaces objects
         # Example when using discrete actions:
-        self.action_space = spaces.Discrete(5)
+        self.action_space = spaces.Discrete(9) # 0~3: move 4~7: rotate 8: attack
         # Example for using image as input:
         self.observation_space = spaces.Box(low=0, high=255, shape=(5,2), dtype=np.uint8)
 
     def step(self, action):
         self.take_action(action)
         reward = 0
-        reward -= 100
         observation = self.get_observation()
+        done = False
         if observation[4,0] == 0 or observation[4,1] == 0:
             done = True
-            reward += 1000
-        #elif observation[0,0] >= 100 or observation[0,1] >= 100:
-        #    done = True
-        #    reward -= 1000
-        elif self.elapsed > 100:
-            reward -= 1000
+            reward = 1 - 0.9 * (self.step_count / self.max_steps)
+        elif self.step_count >= self.max_steps:
             done = True
-        else:
-            done = False
-        self.elapsed += 1
+        self.step_count += 1
         info = {}
+        if done:
+            print(reward)
         return observation, reward, done, info
 
     def reset(self):
         self.enemy_coord = [np.random.randint(50), np.random.randint(50)]
         self.my_coord = [np.random.randint(50), np.random.randint(50)]
+        self.my_angle = 0
+        self.max_steps = 100
+        self.step_count = 0
         observation = self.get_observation()
-        self.elapsed = 0
         return observation
 
     def get_observation(self):
